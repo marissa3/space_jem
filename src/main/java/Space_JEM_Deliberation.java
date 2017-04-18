@@ -14,7 +14,7 @@ import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
-public class Space_JEM extends StateMachineGamer {
+public class Space_JEM_Deliberation extends StateMachineGamer {
 
 	@Override
 	public StateMachine getInitialStateMachine() {
