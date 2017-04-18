@@ -1,5 +1,5 @@
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import org.ggp.base.player.gamer.exception.GamePreviewException;
 import org.ggp.base.player.gamer.statemachine.StateMachineGamer;
@@ -29,16 +29,57 @@ public class Space_JEM_Deliberation extends StateMachineGamer {
 
 	}
 
+	public int maxScore(Role role, MachineState state, StateMachine machine) throws MoveDefinitionException, GoalDefinitionException, TransitionDefinitionException
+	{
+		if (machine.isTerminal(state)){
+			return machine.getGoal(state, role);
+		}
+		List<Move> moves = machine.getLegalMoves(state, role);
+		int score = 0;
+		System.out.println("print moves in maxScore");
+		for(Move m : moves){
+			System.out.println(m.toString());
+		}
+		for (Move m : moves){
+			List<Move> ms = new ArrayList<Move>();
+			ms.add(m);
+			int result = maxScore(role, machine.getNextState(state, ms), machine);
+			if (result > score) score = result;
+		}
+		return  score;
+	}
+
+	public Move findBest(Role role, MachineState state) throws MoveDefinitionException, GoalDefinitionException, TransitionDefinitionException{
+		StateMachine machine = getStateMachine();
+		List<Move> moves = machine.getLegalMoves(state, role);
+		System.out.println("print moves in findbest");
+		for(Move m : moves){
+			System.out.println(m.toString());
+		}
+		Move move = moves.get(0);
+		int score = 0;
+		for (Move m : moves){
+			System.out.println("new move");
+			List<Move> ms = new ArrayList<Move>();
+			ms.add(m);
+			MachineState nextState = machine.getNextState(state, ms);
+			int result = maxScore(role, nextState, machine);
+			if (result == 100) return m;
+			if (result > score){
+				System.out.println(result);
+				score = result;
+				move = m;
+			}
+		}
+		return move;
+	}
+
 	@Override
 	public Move stateMachineSelectMove(long timeout)
 		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
-		StateMachine machine = getStateMachine();
 		MachineState state = getCurrentState();
 		Role role = getRole();
-		List<Move> moves = machine.getLegalMoves(state, role);
-		Random rand = new Random();
-		int ran = rand.nextInt(moves.size());
-		return moves.get(ran);
+		return findBest(role, state);
 	}
 
 	@Override
@@ -62,7 +103,7 @@ public class Space_JEM_Deliberation extends StateMachineGamer {
 	@Override
 	public String getName() {
 		// TODO Auto-generated method stub
-		return "Space JEM";
+		return "Space JEM - Delib";
 	}
 
 }
