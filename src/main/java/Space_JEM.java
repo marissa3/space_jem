@@ -1,4 +1,5 @@
 import java.util.List;
+import java.util.Random;
 
 import org.ggp.base.player.gamer.exception.GamePreviewException;
 import org.ggp.base.player.gamer.statemachine.StateMachineGamer;
@@ -35,8 +36,9 @@ public class Space_JEM extends StateMachineGamer {
 		MachineState state = getCurrentState();
 		Role role = getRole();
 		List<Move> moves = machine.getLegalMoves(state, role);
-
-		return moves.get(0);
+		Random rand = new Random();
+		int ran = rand.nextInt(moves.size());
+		return moves.get(ran);
 	}
 
 	@Override
