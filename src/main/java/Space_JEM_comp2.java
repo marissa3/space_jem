@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import org.ggp.base.player.gamer.exception.GamePreviewException;
 import org.ggp.base.player.gamer.statemachine.StateMachineGamer;
@@ -14,7 +15,7 @@ import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
-public class Space_JEM_comp1 extends StateMachineGamer {
+public class Space_JEM_comp2 extends StateMachineGamer {
 
 	@Override
 	public StateMachine getInitialStateMachine() {
@@ -29,16 +30,23 @@ public class Space_JEM_comp1 extends StateMachineGamer {
 
 	}
 
-	public int minScore(Role role, Move m, MachineState state, StateMachine machine, int alpha, int beta) throws MoveDefinitionException, TransitionDefinitionException, GoalDefinitionException{
+	public int minScore(Role role, Move m, MachineState state, StateMachine machine, int level, int limit) throws MoveDefinitionException, TransitionDefinitionException, GoalDefinitionException{
 		List<Role> allroles = machine.getRoles();
+		//System.out.println("before opponent check");
+		//System.out.println(allroles.toString());
+		//System.out.println(role.toString());
+		//System.out.println("after opponent check");
+		//System.out.println("index 0: " + allroles.get(0).getName());
+		//System.out.println("index 1: " + allroles.get(1).getName());
+		//System.out.println("role: " + role.getName());
 		Role opponent = null;
 		if (allroles.get(0).getName().equals(role.getName())){
 			opponent = allroles.get(1);
 		} else {
 			opponent = allroles.get(0);
 		}
-		System.out.println("opp: " + opponent.toString());
-
+		//System.out.println("opp: " + opponent.toString());
+		int score = 100;
 		List<Move> moves = machine.getLegalMoves(state, opponent);
 		//List<List<Move>> moves = machine.getLegalJointMoves(state, opponent, m);
 		for (Move move : moves){
@@ -52,38 +60,79 @@ public class Space_JEM_comp1 extends StateMachineGamer {
 				jointMove.add(m);
 			}
 			MachineState newState = machine.getNextState(state, jointMove);
-			int result = maxScore(role, newState, machine, alpha, beta);
-			beta = min(beta, result);
-			if (beta <= alpha) return alpha;
+			int result = maxScore(role, newState, machine, level + 1, limit);
+			if (result == 0) return 0;
+			if (result < score) score = result;
 		}
-		return beta;
+		return score;
 	}
 	private int min(int a, int b) {
 		if (a <= b) return a;
 		return b;
 	}
 
-	public int maxScore(Role role, MachineState state, StateMachine machine, int alpha, int beta) throws MoveDefinitionException, GoalDefinitionException, TransitionDefinitionException
+	public int maxScore(Role role, MachineState state, StateMachine machine, int level, int limit) throws MoveDefinitionException, GoalDefinitionException, TransitionDefinitionException
 	{
 		if (machine.isTerminal(state)){
 			return machine.getGoal(state, role);
 		}
+		List<Role> allroles = machine.getRoles();
+		Role opponent = null;
+		if (allroles.get(0).getName().equals(role.getName())){
+			opponent = allroles.get(1);
+		} else {
+			opponent = allroles.get(0);
+		}
+
+		if(level >= limit) {
+			Random rand = new Random();
+			int rnum = rand.nextInt(3);
+			System.out.println("chosen func: " + rnum);
+			if (rnum == 0){
+				return evalfnOppMobility(opponent, state, machine);
+			} else if (rnum == 1){
+				return evalfnMobility(role, state, machine);
+			} else {
+				return evalfnFocus(role, state, machine);
+			}
+		}
+		int score = 0;
 		//actions list; find legals
 		List<Move> moves = machine.getLegalMoves(state, role);
-		System.out.println("print moves in maxScore");
+		//System.out.println("print moves in maxScore");
 		for(Move m : moves){
-			System.out.println(m.toString());
+			//System.out.println(m.toString());
 		}
 		for (Move m : moves){
 			//List<Move> ms = new ArrayList<Move>();
 			//ms.add(m);
-			int result = minScore(role, m, state, machine, alpha, beta);
-			alpha = max(alpha, result);
-			if (alpha >= beta) return beta;
+			int result = minScore(role, m, state, machine, level, limit);
+			if(result == 100) return 100;
+			if (result > score) score = result;
 		}
-		return alpha;
+		return score;
 	}
 
+	//mobility
+	private int evalfnMobility(Role role, MachineState state, StateMachine machine) throws MoveDefinitionException {
+		List<Move> moves = machine.getLegalMoves(state, role);
+		List<Move> feasibleMoves = machine.findActions(role);
+		return (moves.size()/feasibleMoves.size() * 100);
+	}
+
+	//opponent mobility
+	private int evalfnOppMobility(Role opp, MachineState state, StateMachine machine) throws MoveDefinitionException {
+		List<Move> moves = machine.getLegalMoves(state, opp);
+		List<Move> feasibleMoves = machine.findActions(opp);
+		return 100 - (moves.size()/feasibleMoves.size() * 100);
+	}
+
+	//focus
+	private int evalfnFocus(Role role, MachineState state, StateMachine machine) throws MoveDefinitionException {
+		List<Move> moves = machine.getLegalMoves(state, role);
+		List<Move> feasibleMoves = machine.findActions(role);
+		return (100 - moves.size()/feasibleMoves.size() * 100);
+	}
 	private int max(int a, int b) {
 		if (a >= b) return a;
 		return b;
@@ -92,18 +141,21 @@ public class Space_JEM_comp1 extends StateMachineGamer {
 	public Move findBest2Player(Role role, MachineState state) throws MoveDefinitionException, GoalDefinitionException, TransitionDefinitionException{
 		StateMachine machine = getStateMachine();
 		List<Move> moves = machine.getLegalMoves(state, role);
-		System.out.println("print moves in findbest");
+		//System.out.println("print moves in findbest");
+		int limit = 5;
+		int level = 0;
 		int score = 0;
 		for(Move m : moves){
-			System.out.println(m.toString());
+			//System.out.println(m.toString());
 		}
 		Move move = null;
 		for (Move m : moves){
-			System.out.println("new move");
-			int result = minScore(role, m, state, machine, 0, 100);
+			//System.out.println("new move");
+			int result = minScore(role, m, state, machine, level, limit);
+			//line below should technically be removed
 			if (result == 100) return m;
-			if (result > score){
-				System.out.println(result);
+			if (result >= score){
+				//System.out.println(result);
 				score = result;
 				move = m;
 			}
@@ -111,10 +163,27 @@ public class Space_JEM_comp1 extends StateMachineGamer {
 		return move;
 	}
 
-	public int maxScore1Player(Role role, MachineState state, StateMachine machine) throws MoveDefinitionException, GoalDefinitionException, TransitionDefinitionException
+	private boolean timeLimitExceeded(long timeout){
+		long minTime = 8;
+		if(timeout - System.currentTimeMillis() > minTime) return false;
+		return true;
+
+	}
+
+	public int delibMaxScore(Role role, MachineState state, StateMachine machine, long timeout, int level, int limit) throws MoveDefinitionException, GoalDefinitionException, TransitionDefinitionException
 	{
 		if (machine.isTerminal(state)){
 			return machine.getGoal(state, role);
+		}
+		if(level >= limit){
+			Random rand = new Random();
+			int rnum = rand.nextInt(2);
+			System.out.println("chosen func: " + rnum);
+			if (rnum == 0){
+				return evalfnMobility(role, state, machine);
+			} else {
+				return evalfnFocus(role, state, machine);
+			}
 		}
 		List<Move> moves = machine.getLegalMoves(state, role);
 		int score = 0;
@@ -125,27 +194,31 @@ public class Space_JEM_comp1 extends StateMachineGamer {
 		for (Move m : moves){
 			List<Move> ms = new ArrayList<Move>();
 			ms.add(m);
-			int result = maxScore1Player(role, machine.getNextState(state, ms), machine);
+			int result = delibMaxScore(role, machine.getNextState(state, ms), machine, timeout, level + 1, limit);
 			if (result > score) score = result;
 		}
 		return  score;
 	}
-
-	public Move findBest1Player(Role role, MachineState state) throws MoveDefinitionException, GoalDefinitionException, TransitionDefinitionException{
+	public Move findBest1Player(Role role, MachineState state, long timeout) throws MoveDefinitionException, GoalDefinitionException, TransitionDefinitionException{
 		StateMachine machine = getStateMachine();
 		List<Move> moves = machine.getLegalMoves(state, role);
 		System.out.println("print moves in findbest");
 		for(Move m : moves){
 			System.out.println(m.toString());
 		}
+		int level = 0;
+		int limit = 6;
 		Move move = moves.get(0);
 		int score = 0;
 		for (Move m : moves){
+			if(timeLimitExceeded(timeout)){
+				return move;
+			}
 			System.out.println("new move");
 			List<Move> ms = new ArrayList<Move>();
 			ms.add(m);
 			MachineState nextState = machine.getNextState(state, ms);
-			int result = maxScore1Player(role, nextState, machine);
+			int result = delibMaxScore(role, nextState, machine, timeout, level, limit);
 			if (result == 100) return m;
 			if (result > score){
 				System.out.println(result);
@@ -155,15 +228,15 @@ public class Space_JEM_comp1 extends StateMachineGamer {
 		}
 		return move;
 	}
-
 	@Override
 	public Move stateMachineSelectMove(long timeout)
 		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
 		MachineState state = getCurrentState();
 		Role role = getRole();
+
 		StateMachine machine = getStateMachine();
 		if(machine.getRoles().size() == 1){
-			return findBest1Player(role, state);
+			return findBest1Player(role, state, timeout);
 		}
 		return findBest2Player(role, state);
 	}
@@ -189,7 +262,7 @@ public class Space_JEM_comp1 extends StateMachineGamer {
 	@Override
 	public String getName() {
 		// TODO Auto-generated method stub
-		return "Space JEM - comp1";
+		return "Space JEM - comp2";
 	}
 
 }
