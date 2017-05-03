@@ -16,7 +16,7 @@ import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
 public class Space_JEM_mcs extends StateMachineGamer {
 	private long timeout;
-	int buffTime = 8000; //in milliseconds
+	int buffTime = 3000; //in milliseconds
 
 	@Override
 	public StateMachine getInitialStateMachine() {
@@ -145,6 +145,7 @@ public class Space_JEM_mcs extends StateMachineGamer {
 		int count = 4;
 		boolean isTimeToSendMove = false;
 		Move move = null;
+		Move last_best_move = null;
 		while (!isTimeToSendMove){
 			for (Move m : moves){
 				if (timeout - System.currentTimeMillis() < buffTime) {
@@ -159,15 +160,16 @@ public class Space_JEM_mcs extends StateMachineGamer {
 					move = m;
 				}
 			}
+			if (!isTimeToSendMove) last_best_move = move;
 			//if (count % 4 == 0){
 				limit ++;
-				System.out.println("curr lim = " + limit);
+				//System.out.println("curr lim = " + limit);
 			//}
 			//count += 2;
 			//System.out.println("curr count = " + count);
 
 		}
-		return move;
+		return last_best_move;
 	}
 
 	@Override
