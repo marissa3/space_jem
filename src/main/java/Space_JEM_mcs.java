@@ -144,10 +144,10 @@ public class Space_JEM_mcs extends StateMachineGamer {
 		int level = 0;
 		int score = 0;
 
-		int count = 10;
+		int count = 4;
 		boolean isTimeToSendMove = false;
 		Move move = null;
-		Move last_best_move = null;
+		//Move last_best_move = null;
 		while (!isTimeToSendMove){
 			for (Move m : moves){
 				if (timeout - System.currentTimeMillis() < buffTime) {
@@ -164,7 +164,7 @@ public class Space_JEM_mcs extends StateMachineGamer {
 					System.out.println(move.toString());
 				}
 			}
-			if (!isTimeToSendMove) last_best_move = move;
+			//if (!isTimeToSendMove) last_best_move = move;
 			//if (count % 4 == 0){
 			limit ++;
 			System.out.println("curr lim = " + limit);
@@ -173,8 +173,8 @@ public class Space_JEM_mcs extends StateMachineGamer {
 			//System.out.println("curr count = " + count);
 
 		}
-		return last_best_move;
-		//return move;
+		//return last_best_move;
+		return move;
 	}
 
 	@Override
