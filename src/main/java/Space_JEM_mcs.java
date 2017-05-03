@@ -16,7 +16,7 @@ import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
 public class Space_JEM_mcs extends StateMachineGamer {
 	private long timeout;
-	int buffTime = 8000; //in milliseconds
+	int buffTime = 3000; //in milliseconds
 
 	@Override
 	public StateMachine getInitialStateMachine() {
@@ -37,7 +37,7 @@ public class Space_JEM_mcs extends StateMachineGamer {
 		}
 		List<Role> allroles = machine.getRoles();
 		int score = 100;
-		if (allroles.size() > 1){
+		if (allroles.size() > 1){ //only for 2 players
 			Role opponent = null;
 			if (allroles.get(0).getName().equals(role.getName())){
 				opponent = allroles.get(1);
@@ -120,7 +120,9 @@ public class Space_JEM_mcs extends StateMachineGamer {
 		}
 		List<Move> m = new ArrayList<Move>();
 		List<Role> roles = machine.getRoles();
-
+		if (timeout - System.currentTimeMillis() < buffTime) {
+			return 0;
+		}
 		for(int i = 0; i < roles.size(); i++){
 			List<Move> moves= machine.getLegalMoves(state, roles.get(i));
 			int move_i = (int)(Math.random() * moves.size());
@@ -142,9 +144,10 @@ public class Space_JEM_mcs extends StateMachineGamer {
 		int level = 0;
 		int score = 0;
 
-		int count = 4;
+		int count = 10;
 		boolean isTimeToSendMove = false;
 		Move move = null;
+		Move last_best_move = null;
 		while (!isTimeToSendMove){
 			for (Move m : moves){
 				if (timeout - System.currentTimeMillis() < buffTime) {
@@ -161,6 +164,7 @@ public class Space_JEM_mcs extends StateMachineGamer {
 					System.out.println(move.toString());
 				}
 			}
+			if (!isTimeToSendMove) last_best_move = move;
 			//if (count % 4 == 0){
 			limit ++;
 			System.out.println("curr lim = " + limit);
@@ -169,7 +173,8 @@ public class Space_JEM_mcs extends StateMachineGamer {
 			//System.out.println("curr count = " + count);
 
 		}
-		return move;
+		return last_best_move;
+		//return move;
 	}
 
 	@Override
