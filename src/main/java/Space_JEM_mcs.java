@@ -138,7 +138,7 @@ public class Space_JEM_mcs extends StateMachineGamer {
 	public Move findBest(Role role, MachineState state) throws MoveDefinitionException, GoalDefinitionException, TransitionDefinitionException{
 		StateMachine machine = getStateMachine();
 		List<Move> moves = machine.getLegalMoves(state, role);
-		int limit = 2;
+		int limit = 3;
 		int level = 0;
 		int score = 0;
 
@@ -149,6 +149,7 @@ public class Space_JEM_mcs extends StateMachineGamer {
 			for (Move m : moves){
 				if (timeout - System.currentTimeMillis() < buffTime) {
 					isTimeToSendMove = true;
+					System.out.println("timje to break out!");
 					break;
 				}
 				int result = minScore(role, m, state, machine, level, limit, count);
@@ -157,11 +158,12 @@ public class Space_JEM_mcs extends StateMachineGamer {
 				if (result >= score){
 					score = result;
 					move = m;
+					System.out.println(move.toString());
 				}
 			}
 			//if (count % 4 == 0){
-				limit ++;
-				System.out.println("curr lim = " + limit);
+			limit ++;
+			System.out.println("curr lim = " + limit);
 			//}
 			//count += 2;
 			//System.out.println("curr count = " + count);
