@@ -14,6 +14,7 @@ import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
+
 public class mcts_jonas extends StateMachineGamer {
 	private long timeout;
 	int buffTime = 3000; //in milliseconds
@@ -137,13 +138,13 @@ public class mcts_jonas extends StateMachineGamer {
 	private Node select(Node node){
 		if (node.visits == 0) {return node;}
 		for (int i = 0; i<node.children.size(); i++){
-			if (node.children.get(i).visits==0) {
+			if (node.children.get(i).visits == 0) {
 				return node.children.get(i);
 			}
 		}
 		int score = 0;
 		Node result = node;
-		for (int i=0; i<node.children.size(); i++){
+		for (int i=0; i < node.children.size(); i++){
 			int newscore = selectfn(node.children.get(i));
 			if (newscore > score){
 				score = newscore;
@@ -154,8 +155,8 @@ public class mcts_jonas extends StateMachineGamer {
 	}
 
 	private boolean expand (Node node){
-
 		var actions = findlegals(role, node.state, game);
+		//List<Move> moves = machine.getLegalMoves(state, role);
 		for (var i=0; i<actions.length; i++){
 			var newstate = simulate(seq(actions[i]),state);
 			var newnode = makenode(newstate,0,0,node,seq());
@@ -165,7 +166,7 @@ public class mcts_jonas extends StateMachineGamer {
 	}
 
 	private double selectfn(Node node){
-		return node.utility/node.visits+Math.sqrt(2*Math.log(node.parent.visits)/node.visits);
+		return node.utility/node.visits + Math.sqrt(2*Math.log(node.parent.visits)/node.visits);
 	}
 
 	function backpropagate (node,score){
