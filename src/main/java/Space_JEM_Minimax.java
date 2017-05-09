@@ -29,30 +29,43 @@ public class Space_JEM_Minimax extends StateMachineGamer {
 
 	}
 
-	public int maxScore(Role role, MachineState state, StateMachine machine, int player) throws MoveDefinitionException, GoalDefinitionException, TransitionDefinitionException
+	public int maxScore(Role role, Move m, MachineState state, StateMachine machine) throws MoveDefinitionException, GoalDefinitionException, TransitionDefinitionException
 	{
 		if (machine.isTerminal(state)){
 			return machine.getGoal(state, role);
 		}
 		List<Move> moves = machine.getLegalMoves(state, role);
 		int score = 0;
-		for (Move m : moves){
+		for (Move move : moves){
 			List<Move> ms = new ArrayList<Move>();
-			ms.add(m);
+			ms.add(move);
 			int result = minScore(role, machine.getNextState(state, ms), machine, player);
 			if (result > score) score = result;
 		}
 		return  score;
 	}
 
-	public int minScore(Role role, MachineState state, StateMachine machine, int player) throws MoveDefinitionException, GoalDefinitionException, TransitionDefinitionException
+	public int minScore(Role role, Move m, MachineState state, StateMachine machine) throws MoveDefinitionException, GoalDefinitionException, TransitionDefinitionException
 	{
-		List<List<Move>> moves = machine.getLegalJointMoves(getCurrentState());
+		List<Role> allroles = machine.getRoles();
+		Role opp = null;
+		if (allroles.get(0).getName().equals(role.getName())){
+			opp = allroles.get(1);
+		} else {
+			opp = allroles.get(0);
+		}
+		List<Move> moves = machine.getLegalMoves(state, opp);
 		int score = 0;
-		for (Move m : moves.get(player)){
+		for (Move move : moves){
 			List<Move> ms = new ArrayList<Move>();
-			ms.add(m);
-			ms.add(m);
+			List<Role> roles = machine.getRoles();
+			if (role.equals(roles.get(0))){
+				ms.add(m);
+				ms.add(move);
+			} else {
+				ms.add(move);
+				ms.add(m);
+			}
 			ms.add(Math.abs(player - 1), moves.get(Math.abs(player - 1)).get(0));
 			int result = maxScore(role, machine.getNextState(state, ms), machine, player);
 			if (result < score) score = result;
@@ -67,7 +80,7 @@ public class Space_JEM_Minimax extends StateMachineGamer {
 		Move move = moves.get(0);
 		int score = 0;
 		for (Move m : moves){
-			int result = minScore(role, state, machine, 0);
+			int result = minScore(role, state, machine);
 			if (result > score){
 				score = result;
 				move = m;
