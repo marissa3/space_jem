@@ -13,11 +13,11 @@ import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
-/*
+
 
 public class mcts_jonas extends StateMachineGamer {
 	private long timeout;
-	int buffTime = 3000; //in milliseconds
+	int buffTime = 10000; //in milliseconds
 
 
 
@@ -136,7 +136,7 @@ public class mcts_jonas extends StateMachineGamer {
 	}
 
 	private Node select(Node node){
-		if (node.visits <= 1) {return node;}
+		if (node.visits == 0) {return node;}
 		int amtofchildren = node.children.size();
 		for (int i = 0; i < amtofchildren; i++){
 			if (node.children.get(i).visits <= 1) {
@@ -157,8 +157,8 @@ public class mcts_jonas extends StateMachineGamer {
 
 	//single
 	private boolean expand (Node node, MachineState state, StateMachine machine, Role role) throws MoveDefinitionException, TransitionDefinitionException{
-		List<Move> actions = machine.findLegals(role, state);
-		//List<Move> moves = machine.getLegalMoves(state, role);
+		List<Move> actions = machine.getLegalMoves(state, role);
+		//List<List<Move>> jointActions = machine.getLegalJointMoves(state);
 		for (int i = 0; i < actions.size(); i++){
 			MachineState newstate = machine.getNextState(state, actions);// = simulate(seq(actions[i]),state);
 			Node newnode = new Node(0, 0, node, newstate, actions.get(i));
@@ -187,36 +187,34 @@ public class mcts_jonas extends StateMachineGamer {
 
 	public Move findBest(Role role, MachineState state) throws MoveDefinitionException, GoalDefinitionException, TransitionDefinitionException{
 		StateMachine machine = getStateMachine();
-		List<Move> moves = machine.getLegalMoves(state, role);
 		int count = 4;
+		int level = 0;
+		int limit = 3;
 		boolean isTimeToSendMove = false;
 		Node parent = new Node (0, 0, null, state, null);
 		Move bestMove = null;
 		//Move last_best_move = null;
 		while (!isTimeToSendMove){
 		//for (Move m : moves){
+			Node newNode = select(parent);
+			expand(newNode, state, machine, role);
+			for (Node child : newNode.children){
+				//int score = montecarlo(role, child.state, machine, count);
+				int score = minScore(role, child.move, state, machine, level, limit, count);
+				backpropagate(child, score);
+			}
 			if (timeout - System.currentTimeMillis() < buffTime) {
 				isTimeToSendMove = true;
 				break;
 			}
-			Node newNode = select(parent);
-			expand(newNode, state, machine, role);
-			for (Node child : newNode.children){
-				int score = montecarlo(role, state, machine, count);
-				backpropagate(child, score);
-			}
-
-			//
-			for (Node child : parent.children){
-				System.out.println(child.move);
-			}
-			//
-
-			if (bestMove == null){
-				bestMove = highMoveUtil(parent);
-			}
+			bestMove = highMoveUtil(parent);
 		}
 		//return last_best_move;
+		System.out.println("parent: " + parent.utility + " " + parent.visits);
+		for (Node child : parent.children){
+			System.out.println("child: " + child.move + child.utility + " " + child.visits + " = " + child.utility/child.visits);
+		}
+		System.out.println();
 		return bestMove;
 	}
 
@@ -225,13 +223,13 @@ public class mcts_jonas extends StateMachineGamer {
 		Node best = null;
 		double score = 0;
 		for(Node child : parent.children){
-			System.out.println("HMU: " + child.utility + " " + child.visits);
+			//System.out.println("HMU: " + child.utility + " " + child.visits);
 			if((child.utility/child.visits) >= score){
 				best = child;
-				System.out.print("in highMU: ");
-				System.out.println(best.move);
+				//System.out.print("in highMU: ");
+				//System.out.println(best.move);
 				score = child.utility/child.visits;
-				System.out.println(score);
+				//System.out.println(score);
 			}
 		}
 		return best.move;
@@ -268,9 +266,7 @@ public class mcts_jonas extends StateMachineGamer {
 	@Override
 	public String getName() {
 		// TODO Auto-generated method stub
-		return "Space JEM - marissa mcts";
+		return "Space JEM - jonas mcts";
 	}
 
 }
-
-*/
