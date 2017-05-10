@@ -13,7 +13,7 @@ import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
-
+/*
 
 public class mcts_jonas extends StateMachineGamer {
 	private long timeout;
@@ -256,3 +256,5 @@ public class mcts_jonas extends StateMachineGamer {
 	}
 
 }
+
+*/
