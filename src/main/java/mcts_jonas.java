@@ -190,14 +190,16 @@ public class mcts_jonas extends StateMachineGamer {
 		List<Move> moves = machine.getLegalMoves(state, role);
 		int count = 4;
 		boolean isTimeToSendMove = false;
-		Node parent = new Node (0, 0, null, state, null);
+		Node root = new Node (0, 0, null, state, null);
 		Move bestMove = null;
 		//Move last_best_move = null;
+		Node parent = root;
 		while (!isTimeToSendMove){
 		//for (Move m : moves){
 			if (timeout - System.currentTimeMillis() < buffTime) {
 				isTimeToSendMove = true;
-				break;
+				bestMove = highMoveUtil(parent);
+				return bestMove;
 			}
 			Node newNode = select(parent);
 			expand(newNode, state, machine, role);
@@ -212,9 +214,9 @@ public class mcts_jonas extends StateMachineGamer {
 			}
 			//
 
-			if (bestMove == null){
+			/*if (bestMove == null){
 				bestMove = highMoveUtil(parent);
-			}
+			}*/
 		}
 		//return last_best_move;
 		return bestMove;
