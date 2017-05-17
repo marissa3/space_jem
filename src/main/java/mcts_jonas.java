@@ -19,7 +19,7 @@ public class mcts_jonas extends StateMachineGamer {
 	private long timeout;
 	int buffTime = 10000; //in milliseconds
 
-
+	int numDepthCharges = 0;
 
 	@Override
 	public StateMachine getInitialStateMachine() {
@@ -119,6 +119,7 @@ public class mcts_jonas extends StateMachineGamer {
 
 	private int depthcharge(Role role, MachineState state, StateMachine machine) throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
 		if (machine.isTerminal(state)){
+			numDepthCharges++;
 			return machine.getGoal(state, role);
 		}
 		List<Move> m = new ArrayList<Move>();
@@ -210,11 +211,11 @@ public class mcts_jonas extends StateMachineGamer {
 			bestMove = highMoveUtil(parent);
 		}
 		//return last_best_move;
-		System.out.println("parent: " + parent.utility + " " + parent.visits);
+		//System.out.println("parent: " + parent.utility + " " + parent.visits);
 		for (Node child : parent.children){
-			System.out.println("child: " + child.move + child.utility + " " + child.visits + " = " + child.utility/child.visits);
+			//System.out.println("child: " + child.move + child.utility + " " + child.visits + " = " + child.utility/child.visits);
 		}
-		System.out.println();
+		//System.out.println();
 		return bestMove;
 	}
 
@@ -242,6 +243,8 @@ public class mcts_jonas extends StateMachineGamer {
 		MachineState state = getCurrentState();
 		Role role = getRole();
 		Move best = findBest(role, state);
+		System.out.println("num depth charges: " + numDepthCharges);
+		numDepthCharges = 0;
 		return best;
 	}
 
