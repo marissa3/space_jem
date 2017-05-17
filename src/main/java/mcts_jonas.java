@@ -192,11 +192,20 @@ public class mcts_jonas extends StateMachineGamer {
 		int level = 0;
 		int limit = 3;
 		boolean isTimeToSendMove = false;
-		Node parent = new Node (0, 0, null, state, null);
+		Node root = new Node (0, 0, null, state, null);
 		Move bestMove = null;
 		//Move last_best_move = null;
+		Node parent = root;
 		while (!isTimeToSendMove){
 		//for (Move m : moves){
+<<<<<<< HEAD
+			if (timeout - System.currentTimeMillis() < buffTime) {
+				isTimeToSendMove = true;
+				bestMove = highMoveUtil(parent);
+				return bestMove;
+			}
+=======
+>>>>>>> origin/remote/master
 			Node newNode = select(parent);
 			expand(newNode, state, machine, role);
 			for (Node child : newNode.children){
@@ -204,11 +213,24 @@ public class mcts_jonas extends StateMachineGamer {
 				int score = minScore(role, child.move, state, machine, level, limit, count);
 				backpropagate(child, score);
 			}
+<<<<<<< HEAD
+
+			//
+			for (Node child : parent.children){
+				System.out.println(child.move);
+			}
+			//
+
+			/*if (bestMove == null){
+				bestMove = highMoveUtil(parent);
+			}*/
+=======
 			if (timeout - System.currentTimeMillis() < buffTime) {
 				isTimeToSendMove = true;
 				break;
 			}
 			bestMove = highMoveUtil(parent);
+>>>>>>> origin/remote/master
 		}
 		//return last_best_move;
 		//System.out.println("parent: " + parent.utility + " " + parent.visits);
