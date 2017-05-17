@@ -17,9 +17,9 @@ import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
 public class mcts_jonas extends StateMachineGamer {
 	private long timeout;
-	int buffTime = 3000; //in milliseconds
+	int buffTime = 10000; //in milliseconds
 
-
+	int numDepthCharges = 0;
 
 	@Override
 	public StateMachine getInitialStateMachine() {
@@ -119,6 +119,7 @@ public class mcts_jonas extends StateMachineGamer {
 
 	private int depthcharge(Role role, MachineState state, StateMachine machine) throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
 		if (machine.isTerminal(state)){
+			numDepthCharges++;
 			return machine.getGoal(state, role);
 		}
 		List<Move> m = new ArrayList<Move>();
@@ -137,16 +138,17 @@ public class mcts_jonas extends StateMachineGamer {
 
 	private Node select(Node node){
 		if (node.visits == 0) {return node;}
-		for (int i = 0; i<node.children.size(); i++){
-			if (node.children.get(i).visits == 0) {
+		int amtofchildren = node.children.size();
+		for (int i = 0; i < amtofchildren; i++){
+			if (node.children.get(i).visits <= 1) {
 				return node.children.get(i);
 			}
 		}
 		int score = 0;
 		Node result = node;
 		for (int i=0; i < node.children.size(); i++){
-			int newscore = selectfn(node.children.get(i));
-			if (newscore > score){
+			int newscore = (int)selectfn(node.children.get(i));
+			if (newscore >= score){
 				score = newscore;
 				result = node.children.get(i);
 			}
@@ -154,25 +156,26 @@ public class mcts_jonas extends StateMachineGamer {
 		return select(result);
 	}
 
-	private boolean expand (Node node){
-		var actions = findlegals(role, node.state, game);
-		//List<Move> moves = machine.getLegalMoves(state, role);
-		for (var i=0; i<actions.length; i++){
-			var newstate = simulate(seq(actions[i]),state);
-			var newnode = makenode(newstate,0,0,node,seq());
-			node.children[node.children.length] = newnode;
+	//single
+	private boolean expand (Node node, MachineState state, StateMachine machine, Role role) throws MoveDefinitionException, TransitionDefinitionException{
+		List<Move> actions = machine.getLegalMoves(state, role);
+		//List<List<Move>> jointActions = machine.getLegalJointMoves(state);
+		for (int i = 0; i < actions.size(); i++){
+			MachineState newstate = machine.getNextState(state, actions);// = simulate(seq(actions[i]),state);
+			Node newnode = new Node(0, 0, node, newstate, actions.get(i));
+			node.children.add(newnode);
 		}
-	  return true;
+		return true;
 	}
 
 	private double selectfn(Node node){
 		return node.utility/node.visits + Math.sqrt(2*Math.log(node.parent.visits)/node.visits);
 	}
 
-	function backpropagate (node,score){
-		node.visits = node.visits+1;
-		node.utility = node.utility+score;
-		if (node.parent) {
+	private boolean backpropagate (Node node, int score){
+		node.visits = node.visits + 1;
+		node.utility = node.utility + score;
+		if (node.parent != null) {
 			backpropagate(node.parent,score);
 		}
 	  return true;
@@ -185,40 +188,74 @@ public class mcts_jonas extends StateMachineGamer {
 
 	public Move findBest(Role role, MachineState state) throws MoveDefinitionException, GoalDefinitionException, TransitionDefinitionException{
 		StateMachine machine = getStateMachine();
-		List<Move> moves = machine.getLegalMoves(state, role);
-		int limit = 2;
-		int level = 0;
-		int score = 0;
-
 		int count = 4;
+		int level = 0;
+		int limit = 3;
 		boolean isTimeToSendMove = false;
-		Move move = null;
+		Node root = new Node (0, 0, null, state, null);
+		Move bestMove = null;
 		//Move last_best_move = null;
+		Node parent = root;
 		while (!isTimeToSendMove){
-			for (Move m : moves){
-				if (timeout - System.currentTimeMillis() < buffTime) {
-					isTimeToSendMove = true;
-					break;
-				}
-				int result = minScore(role, m, state, machine, level, limit, count);
-				//line below should technically be removed
-				if (result == 100) return m;
-				if (result >= score){
-					score = result;
-					move = m;
-				}
+		//for (Move m : moves){
+<<<<<<< HEAD
+			if (timeout - System.currentTimeMillis() < buffTime) {
+				isTimeToSendMove = true;
+				bestMove = highMoveUtil(parent);
+				return bestMove;
 			}
-			//if (!isTimeToSendMove) last_best_move = move;
-			//if (count % 4 == 0){
-				limit ++;
-				System.out.println("curr lim = " + limit);
-			//}
-			//count += 2;
-			//System.out.println("curr count = " + count);
+=======
+>>>>>>> origin/remote/master
+			Node newNode = select(parent);
+			expand(newNode, state, machine, role);
+			for (Node child : newNode.children){
+				//int score = montecarlo(role, child.state, machine, count);
+				int score = minScore(role, child.move, state, machine, level, limit, count);
+				backpropagate(child, score);
+			}
+<<<<<<< HEAD
 
+			//
+			for (Node child : parent.children){
+				System.out.println(child.move);
+			}
+			//
+
+			/*if (bestMove == null){
+				bestMove = highMoveUtil(parent);
+			}*/
+=======
+			if (timeout - System.currentTimeMillis() < buffTime) {
+				isTimeToSendMove = true;
+				break;
+			}
+			bestMove = highMoveUtil(parent);
+>>>>>>> origin/remote/master
 		}
 		//return last_best_move;
-		return move;
+		//System.out.println("parent: " + parent.utility + " " + parent.visits);
+		for (Node child : parent.children){
+			//System.out.println("child: " + child.move + child.utility + " " + child.visits + " = " + child.utility/child.visits);
+		}
+		//System.out.println();
+		return bestMove;
+	}
+
+	private Move highMoveUtil(Node parent) {
+		if(parent.children.size() == 0){ return null;}
+		Node best = null;
+		double score = 0;
+		for(Node child : parent.children){
+			//System.out.println("HMU: " + child.utility + " " + child.visits);
+			if((child.utility/child.visits) >= score){
+				best = child;
+				//System.out.print("in highMU: ");
+				//System.out.println(best.move);
+				score = child.utility/child.visits;
+				//System.out.println(score);
+			}
+		}
+		return best.move;
 	}
 
 	@Override
@@ -228,6 +265,8 @@ public class mcts_jonas extends StateMachineGamer {
 		MachineState state = getCurrentState();
 		Role role = getRole();
 		Move best = findBest(role, state);
+		System.out.println("num depth charges: " + numDepthCharges);
+		numDepthCharges = 0;
 		return best;
 	}
 
@@ -252,7 +291,7 @@ public class mcts_jonas extends StateMachineGamer {
 	@Override
 	public String getName() {
 		// TODO Auto-generated method stub
-		return "Space JEM - mcs";
+		return "Space JEM - jonas mcts";
 	}
 
 }

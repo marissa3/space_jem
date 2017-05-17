@@ -142,7 +142,7 @@ public class Space_JEM_comp2 extends StateMachineGamer {
 		StateMachine machine = getStateMachine();
 		List<Move> moves = machine.getLegalMoves(state, role);
 		//System.out.println("print moves in findbest");
-		int limit = 5;
+		int limit = 3;
 		int level = 0;
 		int score = 0;
 		for(Move m : moves){
@@ -207,7 +207,7 @@ public class Space_JEM_comp2 extends StateMachineGamer {
 			System.out.println(m.toString());
 		}
 		int level = 0;
-		int limit = 6;
+		int limit = 3;
 		Move move = moves.get(0);
 		int score = 0;
 		for (Move m : moves){
