@@ -12,7 +12,6 @@ import org.ggp.base.util.statemachine.cache.CachedStateMachine;
 import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
-import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
 
 public class mcts_jonas extends StateMachineGamer {
@@ -24,7 +23,8 @@ public class mcts_jonas extends StateMachineGamer {
 	@Override
 	public StateMachine getInitialStateMachine() {
 		// TODO Auto-generated method stub
-		return new CachedStateMachine(new ProverStateMachine());
+		//return new CachedStateMachine(new ProverStateMachine());
+		return new CachedStateMachine(new PropNetStateMachine());
 	}
 
 	@Override
@@ -142,10 +142,10 @@ public class mcts_jonas extends StateMachineGamer {
 				return node.children.get(i);
 			}
 		}
-		int score = 0;
+		double score = 0;
 		Node result = node;
 		for (int i=0; i < node.children.size(); i++){
-			int newscore = selectfn(node.children.get(i));
+			double newscore = selectfn(node.children.get(i));
 			if (newscore > score){
 				score = newscore;
 				result = node.children.get(i);
@@ -154,12 +154,15 @@ public class mcts_jonas extends StateMachineGamer {
 		return select(result);
 	}
 
-	private boolean expand (Node node){
-		var actions = findlegals(role, node.state, game);
-		//List<Move> moves = machine.getLegalMoves(state, role);
-		for (var i=0; i<actions.length; i++){
-			var newstate = simulate(seq(actions[i]),state);
-			var newnode = makenode(newstate,0,0,node,seq());
+	private boolean expand (Node node, StateMachine machine, Role role){
+
+		//var actions = findlegals(role, node.state, game);
+		List<Move> actions = machine.getLegalMoves(node.state, role);
+		for (int i=0; i<actions.size(); i++){
+			MachineState newstate = machine.getNextState(node.state, actions.get(i));
+
+			Node newNode = new Node(newstate, 0, 0, node, seq());
+			//var newnode = makenode(newstate,0,0,node,seq());
 			node.children[node.children.length] = newnode;
 		}
 	  return true;
@@ -169,10 +172,10 @@ public class mcts_jonas extends StateMachineGamer {
 		return node.utility/node.visits + Math.sqrt(2*Math.log(node.parent.visits)/node.visits);
 	}
 
-	function backpropagate (node,score){
+	private boolean backpropagate (Node node,int score){
 		node.visits = node.visits+1;
 		node.utility = node.utility+score;
-		if (node.parent) {
+		if (node.parent != null) {
 			backpropagate(node.parent,score);
 		}
 	  return true;
