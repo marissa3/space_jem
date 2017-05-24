@@ -19,6 +19,7 @@ public class mcts_jonas extends StateMachineGamer {
 	private long timeout;
 	int buffTime = 10000; //in milliseconds
 
+	private Node root = null;
 
 
 	@Override
@@ -136,13 +137,12 @@ public class mcts_jonas extends StateMachineGamer {
 	}
 
 	private Node select(Node node){
-		if (node.visits == 0) {return node;}
+		//List<Move> actions = machine.getLegalMoves(state, role);
 		int amtofchildren = node.children.size();
-		for (int i = 0; i < amtofchildren; i++){
-			if (node.children.get(i).visits <= 1) {
-				return node.children.get(i);
-			}
+		if(amtofchildren != node.numTotalChildren){
+			return node;
 		}
+
 		int score = 0;
 		Node result = node;
 		for (int i=0; i < node.children.size(); i++){
@@ -155,20 +155,69 @@ public class mcts_jonas extends StateMachineGamer {
 		return select(result);
 	}
 
+	private MachineState findAvailState(Node node, MachineState state, StateMachine machine, Role role) throws MoveDefinitionException, TransitionDefinitionException{
+		List<Move> moves = machine.getLegalMoves(state, role);
+		return machine.getNextState(state, moves);
+		//if parent, check if it has visits
+		//if no visits, choose the parent
+		//if visited, choose a child, then recurse
+	}
+
 	//single
-	private boolean expand (Node node, MachineState state, StateMachine machine, Role role) throws MoveDefinitionException, TransitionDefinitionException{
+	/*private boolean expand (Node node, MachineState state, StateMachine machine, Role role) throws MoveDefinitionException, TransitionDefinitionException{
 		List<Move> actions = machine.getLegalMoves(state, role);
 		//List<List<Move>> jointActions = machine.getLegalJointMoves(state);
+		MachineState newstate = findAvailState(node, state, machine, role);
 		for (int i = 0; i < actions.size(); i++){
 			MachineState newstate = machine.getNextState(state, actions);// = simulate(seq(actions[i]),state);
 			Node newnode = new Node(0, 0, node, newstate, actions.get(i));
 			node.children.add(newnode);
 		}
 		return true;
+	}*/
+
+	private List<String> movesList(Node node){
+		List<String> moves = new ArrayList<String>();
+		for(Node child : node.children){
+			moves.add(child.move.toString());
+		}
+		return moves;
+	}
+
+	private Node expand (Node node, MachineState state, StateMachine machine, Role role) throws MoveDefinitionException, TransitionDefinitionException{
+		List<Move> actions = machine.getLegalMoves(state, role);
+		if(node.children.size() == 0){
+			//List of moves for newstate is for single player
+			List<Move> currMove = new ArrayList<Move>();
+			currMove.add(actions.get(0));
+			MachineState newstate = machine.getNextState(state, currMove);// = simulate(seq(actions[i]),state);
+			int numChildren = (machine.getLegalMoves(newstate, role)).size();
+			Node newnode = new Node(0, 0, node, newstate, actions.get(0), numChildren);
+			node.children.add(newnode);
+			//System.out.println("in expand function; first baby " + newnode.move.toString());
+			return newnode;
+		}
+		List<String> childMoves = movesList(node);
+		for (int i = 0; i < actions.size(); i++){
+			//find the child that hasn't been expanded on yet
+			if(!childMoves.contains(actions.get(i).toString())){
+				//for one player
+				List<Move> currMove = new ArrayList<Move>();
+				currMove.add(actions.get(i));
+				MachineState newstate = machine.getNextState(state, currMove);// = simulate(seq(actions[i]),state);
+				int numChildren = (machine.getLegalMoves(newstate, role)).size();
+				Node newnode = new Node(0, 0, node, newstate, actions.get(i), numChildren);
+				node.children.add(newnode);
+				//System.out.println("in expand function " + newnode.move.toString());
+				return newnode;
+			}
+		}
+		System.out.println("should never get here,,,,,,,,");
+		return node;
 	}
 
 	private double selectfn(Node node){
-		return node.utility/node.visits + Math.sqrt(2*Math.log(node.parent.visits)/node.visits);
+		return node.utility/node.visits + 50 * Math.sqrt(Math.log(node.parent.visits)/node.visits);
 	}
 
 	private boolean backpropagate (Node node, int score){
@@ -191,69 +240,78 @@ public class mcts_jonas extends StateMachineGamer {
 		int level = 0;
 		int limit = 3;
 		boolean isTimeToSendMove = false;
-		Node root = new Node (0, 0, null, state, null);
+		if(root == null){
+			int numChildren = (machine.getLegalMoves(state, role)).size();
+			System.out.println("MADE NEW ROOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOT!!");
+			root = new Node (0, 0, null, state, null, numChildren);
+		}
 		Move bestMove = null;
 		//Move last_best_move = null;
-		Node parent = root;
+		//Node parent = root;
+		int numChildren = (machine.getLegalMoves(state, role)).size();
+		System.out.println("******NumTotalChildren******* " + numChildren);
 		while (!isTimeToSendMove){
 		//for (Move m : moves){
-<<<<<<< HEAD
-			if (timeout - System.currentTimeMillis() < buffTime) {
-				isTimeToSendMove = true;
-				bestMove = highMoveUtil(parent);
-				return bestMove;
+
+			Node selectedNode = select(root);
+			Node expandedNode = null;
+			if (machine.isTerminal(selectedNode.state)){
+				//System.out.println("******LEAF NODE******");
+				expandedNode = selectedNode;
+				//backpropagate()
+			} else {
+				expandedNode = expand(selectedNode, selectedNode.state, machine, role);
 			}
-=======
->>>>>>> origin/remote/master
-			Node newNode = select(parent);
-			expand(newNode, state, machine, role);
-			for (Node child : newNode.children){
-				//int score = montecarlo(role, child.state, machine, count);
-				int score = minScore(role, child.move, state, machine, level, limit, count);
-				backpropagate(child, score);
-			}
-<<<<<<< HEAD
+			//System.out.println(expandedNode.move.toString());
+			List<Move> moves = machine.getLegalMoves(expandedNode.state, role);
+			//for (Move m : moves){
+				int score = montecarlo(role, expandedNode.state, machine, count);
+				//System.out.println("move" + expandedNode.move.toString());
+				//int score = minScore(role, m, expandedNode.state, machine, level, limit, count);
+				backpropagate(expandedNode, score);
+			//}
+
 
 			//
-			for (Node child : parent.children){
-				System.out.println(child.move);
-			}
-			//
+			//for (Node child : parent.children){
+			//System.out.println("Expanded node move " + expandedNode.move);
+			//}
 
-			/*if (bestMove == null){
-				bestMove = highMoveUtil(parent);
-			}*/
-=======
 			if (timeout - System.currentTimeMillis() < buffTime) {
 				isTimeToSendMove = true;
+				bestMove = highMoveUtil(root);
 				break;
 			}
-			bestMove = highMoveUtil(parent);
->>>>>>> origin/remote/master
+			//return last_best_move;
+			//System.out.println("parent: " + parent.utility + " " + parent.visits);
+			//for (Node child : parent.children){
+			//System.out.println("expandedNode: " + expandedNode.move + expandedNode.utility + " " + expandedNode.visits + " = " + expandedNode.utility/expandedNode.visits);
+			//}
+			//System.out.println();
 		}
-		//return last_best_move;
-		System.out.println("parent: " + parent.utility + " " + parent.visits);
-		for (Node child : parent.children){
-			System.out.println("child: " + child.move + child.utility + " " + child.visits + " = " + child.utility/child.visits);
-		}
-		System.out.println();
+
 		return bestMove;
 	}
 
 	private Move highMoveUtil(Node parent) {
-		if(parent.children.size() == 0){ return null;}
+		System.out.println("***********In HMU: ");
+		//if(parent.children.size() == 0){ System.out.println("children is 0"); return null;}
 		Node best = null;
 		double score = 0;
 		for(Node child : parent.children){
-			//System.out.println("HMU: " + child.utility + " " + child.visits);
+			System.out.println("HMU: " + child.utility + " " + child.visits);
+			System.out.println(child.move);
+			System.out.println(child.utility/child.visits);
 			if((child.utility/child.visits) >= score){
 				best = child;
 				//System.out.print("in highMU: ");
-				//System.out.println(best.move);
+				System.out.println("BEST: " + best.move);
 				score = child.utility/child.visits;
-				//System.out.println(score);
 			}
 		}
+		root = best;
+		root.parent = null;
+		System.out.println("**********Done with HMU: \n");
 		return best.move;
 	}
 
