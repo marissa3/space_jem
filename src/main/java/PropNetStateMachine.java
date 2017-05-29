@@ -172,6 +172,7 @@ public class PropNetStateMachine extends StateMachine {
     public boolean markbases(List<Proposition> vector) {
     	Map<GdlSentence, Proposition> props = propNet.getBasePropositions();
     	for (int i=0; i<props.size(); i++) {
+    		props.get(i).
     		 props.get(i).setValue(vector.get(i).getValue());
     	}
     	return true;
