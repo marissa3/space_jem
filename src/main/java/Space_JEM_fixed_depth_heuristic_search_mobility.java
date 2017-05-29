@@ -40,11 +40,15 @@ public class Space_JEM_fixed_depth_heuristic_search_mobility extends StateMachin
 		//System.out.println("index 1: " + allroles.get(1).getName());
 		//System.out.println("role: " + role.getName());
 		Role opponent = null;
-		if (allroles.get(0).getName().equals(role.getName())){
-			opponent = allroles.get(1);
-		} else {
-			opponent = allroles.get(0);
+		List<Role> opps = new ArrayList<Role>;
+		//int myRoleIndex = 0;
+		for (int i = 0; i < allroles.size(); i++){
+			if (!allroles.get(i).getName().equals(role.getName())) {
+				opps.add(allroles.get(i));
+			}
 		}
+
+
 		//System.out.println("opp: " + opponent.toString());
 		int score = 100;
 		List<Move> moves = machine.getLegalMoves(state, opponent);

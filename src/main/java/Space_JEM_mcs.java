@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import org.ggp.base.player.gamer.exception.GamePreviewException;
 import org.ggp.base.player.gamer.statemachine.StateMachineGamer;
@@ -12,6 +13,7 @@ import org.ggp.base.util.statemachine.cache.CachedStateMachine;
 import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
+import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
 public class Space_JEM_mcs extends StateMachineGamer {
 	private long timeout;
@@ -20,7 +22,7 @@ public class Space_JEM_mcs extends StateMachineGamer {
 	@Override
 	public StateMachine getInitialStateMachine() {
 		// TODO Auto-generated method stub
-		return new CachedStateMachine(new PropNetStateMachine());
+		return new CachedStateMachine(new ProverStateMachine());
 	}
 
 	@Override
@@ -176,12 +178,25 @@ public class Space_JEM_mcs extends StateMachineGamer {
 		return move;
 	}
 
+	public Move getRandomMove(Role role, MachineState state) throws MoveDefinitionException, GoalDefinitionException, TransitionDefinitionException{
+		StateMachine machine = getStateMachine();
+		List<Move> moves = machine.getLegalMoves(state, role);
+		Random rand = new Random();
+		int ran = rand.nextInt(moves.size());
+		return moves.get(ran);
+	}
+
 	@Override
 	public Move stateMachineSelectMove(long timeout)
 		throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
 		this.timeout = timeout;
 		MachineState state = getCurrentState();
 		Role role = getRole();
+		StateMachine machine = getStateMachine();
+		int numRoles = machine.getRoles().size();
+		if (numRoles > 2){
+			return getRandomMove(role, state);
+		}
 		Move best = findBest(role, state);
 		return best;
 	}
@@ -207,7 +222,7 @@ public class Space_JEM_mcs extends StateMachineGamer {
 	@Override
 	public String getName() {
 		// TODO Auto-generated method stub
-		return "Space JEM - mcs";
+		return "Space JEM - mcs- 1";
 	}
 
 }

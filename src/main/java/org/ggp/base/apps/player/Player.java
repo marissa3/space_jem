@@ -104,6 +104,7 @@ public final class Player extends JPanel
 			    gamers.remove(gamer);
 			}
 		}
+		typeComboBox.setSelectedItem("Space JEM");
 
 		JPanel managerPanel = new JPanel(new GridBagLayout());
 		managerPanel.setBorder(new TitledBorder("Manager"));
