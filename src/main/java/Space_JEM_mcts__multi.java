@@ -170,7 +170,7 @@ public class Space_JEM_mcts__multi extends StateMachineGamer {
 		MachineState newstate = findAvailState(node, state, machine, role);
 		for (int i = 0; i < actions.size(); i++){
 			MachineState newstate = machine.getNextState(state, actions);// = simulate(seq(actions[i]),state);
-			Node_multi newnode = new Node(0, 0, node, newstate, actions.get(i));
+			Node_multi newnode = new Node_multi(0, 0, node, newstate, actions.get(i));
 			node.children.add(newnode);
 		}
 		return true;
@@ -178,35 +178,74 @@ public class Space_JEM_mcts__multi extends StateMachineGamer {
 
 	private List<String> movesList(Node_multi node){
 		List<String> moves = new ArrayList<String>();
-		for(Node_multi child : node.children){
-			moves.add(child.move.toString());
+		for(List<Node_multi> gchild : node.grandchildren){
+			moves.add(gchild.move.toString());
 		}
 		return moves;
 	}
 
+	private int get_role_index(StateMachine machine, Role role){
+		List<Role> roles = machine.getRoles();
+		int i = 0;
+		for (Role r : roles){
+			if (r.getName().equals(role.getName())){
+				return i;
+			}
+			i++;
+		}
+		return 0;
+	}
+
+	private Node_multi create_blue_node(Node_multi parent, MachineState node_state, Move my_move, int numChildren){
+		Node_multi newnode = new Node_multi(0, 0, parent, node_state, my_move, numChildren);
+		return newnode;
+	}
+
+	private Node_multi create_red_node(Node_multi parent, MachineState node_state, Move my_move, int numChildren){
+		Node_multi newnode = new Node_multi(0, 0, parent, node_state, my_move, numChildren);
+		return newnode;
+	}
+
 	private Node_multi expand (Node_multi node, MachineState state, StateMachine machine, Role role) throws MoveDefinitionException, TransitionDefinitionException{
-		List<Move> actions = machine.getLegalMoves(state, role);
-		if(node.children.size() == 0){
-			//List of moves for newstate is for single player
-			List<Move> currMove = new ArrayList<Move>();
-			currMove.add(actions.get(0));
-			MachineState newstate = machine.getNextState(state, currMove);// = simulate(seq(actions[i]),state);
-			int numChildren = (machine.getLegalMoves(newstate, role)).size();
-			Node_multi newnode = new Node(0, 0, node, newstate, actions.get(0), numChildren);
-			node.children.add(newnode);
+		List<List<Move>> jointMoves = machine.getLegalJointMoves(state);
+		if(node.grandchildren.size() == 0){
+			List<Move> firstJointMove = jointMoves.get(0);
+			int role_index = get_role_index(machine, role);
+			Move my_move = firstJointMove.get(role_index);
+			int numChildren = jointMoves.size() / machine.getLegalMoves(state, role).size();
+			Node_multi new_blue_node = create_blue_node(node, null, my_move, numChildren);
+			node.children.add(new_blue_node);
+
+			MachineState newstate = machine.getNextState(state, firstJointMove);
+			int numChildrenRed = machine.getLegalMoves(newstate, role).size();
+			Node_multi new_red_node = create_red_node(new_blue_node, newstate, null, numChildrenRed);
+			new_red_node.jointMove = firstJointMove;
+
+			new_blue_node.children.add(new_red_node);
+			node.grandchildren.add(new_red_node);
+
 			//System.out.println("in expand function; first baby " + newnode.move.toString());
-			return newnode;
+			return new_red_node;
 		}
 		List<String> childMoves = movesList(node);
-		for (int i = 0; i < actions.size(); i++){
+		for (int i = 0; i < jointMoves.size(); i++){
+			List<Move> iJointMove = jointMoves.get(i);
+			int role_index = get_role_index(machine, role);
+			Move my_move = iJointMove.get(role_index);
 			//find the child that hasn't been expanded on yet
-			if(!childMoves.contains(actions.get(i).toString())){
-				//for one player
+			//if(!childMoves.contains(my_move.toString())){
+
+			//Check if the child needs more kids
+
+			//Check if child exists
+			if(childMoves.contains(my_move.toString())){
+				//check if grandchild exists
+				if(!childMoves.contains(my_move.toString())){
 				List<Move> currMove = new ArrayList<Move>();
-				currMove.add(actions.get(i));
+				currMove.add(jointMoves.get(i));
 				MachineState newstate = machine.getNextState(state, currMove);// = simulate(seq(actions[i]),state);
 				int numChildren = (machine.getLegalMoves(newstate, role)).size();
-				Node_multi newnode = new Node(0, 0, node, newstate, actions.get(i), numChildren);
+				Node_multi newnode = new Node_multi(0, 0, node, newstate, actions.get(i), numChildren);
 				node.children.add(newnode);
 				//System.out.println("in expand function " + newnode.move.toString());
 				return newnode;
@@ -255,26 +294,26 @@ public class Space_JEM_mcts__multi extends StateMachineGamer {
 
 			Node_multi selectedNode_multi = select(root);
 			Node_multi expandedNode_multi = null;
-			if (machine.isTerminal(selectedNode.state)){
+			if (machine.isTerminal(selectedNode_multi.state)){
 				//System.out.println("******LEAF NODE******");
-				expandedNode_multi = selectedNode;
+				expandedNode_multi = selectedNode_multi;
 				//backpropagate()
 			} else {
-				expandedNode_multi = expand(selectedNode, selectedNode.state, machine, role);
+				expandedNode_multi = expand(selectedNode_multi, selectedNode_multi.state, machine, role);
 			}
-			//System.out.println(expandedNode.move.toString());
-			List<Move> moves = machine.getLegalMoves(expandedNode.state, role);
+			//System.out.println(expandedNode_multi.move.toString());
+			List<Move> moves = machine.getLegalMoves(expandedNode_multi.state, role);
 			//for (Move m : moves){
-				int score = montecarlo(role, expandedNode.state, machine, count);
-				//System.out.println("move" + expandedNode.move.toString());
-				//int score = minScore(role, m, expandedNode.state, machine, level, limit, count);
-				backpropagate(expandedNode, score);
+				int score = montecarlo(role, expandedNode_multi.state, machine, count);
+				//System.out.println("move" + expandedNode_multi.move.toString());
+				//int score = minScore(role, m, expandedNode_multi.state, machine, level, limit, count);
+				backpropagate(expandedNode_multi, score);
 			//}
 
 
 			//
 			//for (Node_multi child : parent.children){
-			//System.out.println("Expanded node move " + expandedNode.move);
+			//System.out.println("Expanded node move " + expandedNode_multi.move);
 			//}
 
 			if (timeout - System.currentTimeMillis() < buffTime) {
@@ -285,7 +324,7 @@ public class Space_JEM_mcts__multi extends StateMachineGamer {
 			//return last_best_move;
 			//System.out.println("parent: " + parent.utility + " " + parent.visits);
 			//for (Node_multi child : parent.children){
-			//System.out.println("expandedNode: " + expandedNode.move + expandedNode.utility + " " + expandedNode.visits + " = " + expandedNode.utility/expandedNode.visits);
+			//System.out.println("expandedNode_multi: " + expandedNode_multi.move + expandedNode_multi.utility + " " + expandedNode_multi.visits + " = " + expandedNode_multi.utility/expandedNode_multi.visits);
 			//}
 			//System.out.println();
 		}
