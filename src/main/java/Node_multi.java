@@ -7,11 +7,11 @@ import org.ggp.base.util.statemachine.Move;
 
 
 public class Node_multi {
-	public int my_visits;
-	public int opp_visits;
+	public List<Integer> my_visits;
+	public List<Integer> opp_visits;
 
-	public double my_utilities;
-	public double opp_utilities;
+	public List<Double> my_utilities;
+	public List<Double> opp_utilities;
 
 	public List<Node_multi> children;
 	public Node_multi parent;
@@ -20,11 +20,11 @@ public class Node_multi {
 	public int numTotalChildren;
 	//public boolean isLeaf;
 
-	public Node_multi(int my_visits, int opp_visits, double my_utilities, double opp_utilities, Node_multi parent, MachineState state, Move move, int numTotalChildren){
-		this.my_visits = my_visits;
-		this.opp_visits = opp_visits;
-		this.my_utilities = my_utilities;
-		this.opp_utilities = opp_utilities;
+	public Node_multi(Node_multi parent, MachineState state, Move move, int numTotalChildren){
+		this.my_visits = new ArrayList<Integer>();
+		this.opp_visits = new ArrayList<Integer>();
+		this.my_utilities = new ArrayList<Double>();
+		this.opp_utilities = new ArrayList<Double>();
 		this.numTotalChildren = numTotalChildren;
 		this.children = new ArrayList<Node_multi>();
 		//List<Node> children = new ArrayList<Node>();
