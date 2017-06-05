@@ -23,10 +23,22 @@ public class Node_multi {
 		this.utility = utility;
 		this.numTotalChildren = numTotalChildren;
 		this.children = new ArrayList<Node_multi>();
-		//List<Node> children = new ArrayList<Node>();
+		this.grandchildren = new ArrayList<Node_multi>();
 		this.parent = parent;
 		this.state = state;
 		this.move = move;
+	}
+
+	public Node_multi(int visits, double utility, Node_multi parent, MachineState state, Move move, int numTotalChildren, List<Move> jointMove){
+		this.visits = visits;
+		this.utility = utility;
+		this.numTotalChildren = numTotalChildren;
+		this.children = new ArrayList<Node_multi>();
+		this.grandchildren = new ArrayList<Node_multi>();
+		this.parent = parent;
+		this.state = state;
+		this.move = move;
+		this.jointMove = jointMove;
 	}
 
 	//public Node(int visits2, int utility2, Node node, MachineState newstate, Move move2, int numChildren,

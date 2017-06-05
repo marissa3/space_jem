@@ -183,7 +183,27 @@ public class Space_JEM_mcs extends StateMachineGamer {
 		this.timeout = timeout;
 		MachineState state = getCurrentState();
 		Role role = getRole();
-		Move best = findBest(role, state);
+		StateMachine machine = getStateMachine();
+		for (Move m : machine.getLegalMoves(state, role)){
+			//System.out.println(m);
+		}
+		//System.out.println();
+		Move best = null;
+		if (machine.findRoles().size() <= 2){
+			best = findBest(role, state);
+		} else {
+			while (timeout - System.currentTimeMillis() > buffTime) {
+				;
+			}
+			best = machine.getRandomMove(state, role);
+			String noop = "noop";
+			if (machine.getLegalMoves(state, role).size() > 1){
+				while (best.toString().equals(noop)){
+					//System.out.println("Oh no... it's noop");
+					best = machine.getRandomMove(state, role);
+				}
+			}
+		}
 		return best;
 	}
 
@@ -208,7 +228,7 @@ public class Space_JEM_mcs extends StateMachineGamer {
 	@Override
 	public String getName() {
 		// TODO Auto-generated method stub
-		return "Space JEM - mcs";
+		return "Space JEM - mcs - prover";
 	}
 
 }
