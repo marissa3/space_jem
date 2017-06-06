@@ -13,10 +13,14 @@ public class Node_multi {
 	public List<Double> my_utilities;
 	public List<Double> opp_utilities;
 
+	public int visits;
+	public double utility;
 	public List<Node_multi> children;
+	//public List<Node_multi> grandchildren;
 	public Node_multi parent;
 	public MachineState state;
 	public Move move;
+	public List<Move> jointMove;
 	public int numTotalChildren;
 	//public boolean isLeaf;
 
@@ -25,6 +29,11 @@ public class Node_multi {
 		this.opp_visits = new ArrayList<Integer>();
 		this.my_utilities = new ArrayList<Double>();
 		this.opp_utilities = new ArrayList<Double>();
+	//}
+
+	//public Node_multi(int visits, double utility, Node_multi parent, MachineState state, Move move, int numTotalChildren){
+		//this.visits = visits;
+		//this.utility = utility;
 		this.numTotalChildren = numTotalChildren;
 		this.children = new ArrayList<Node_multi>();
 		//List<Node> children = new ArrayList<Node>();
