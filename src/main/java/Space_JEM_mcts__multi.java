@@ -42,10 +42,31 @@ public class Space_JEM_mcts__multi extends StateMachineGamer {
 		int total = 0;
 		ThreadCharger[] tcList = new ThreadCharger[count];
 		for(int i = 0; i < count; i++){
+<<<<<<< HEAD
 			//int value = 0;
 			tcList[i] = new ThreadCharger(role, state, machine);
 		    tcList[i].start();
 			//total += depthcharge(role, state, machine);
+=======
+			int value = 0;
+//		    Thread charger = new Thread(new Runnable() {
+//		         @Override
+//				public void run() {
+//		              value = depthcharge(role, state, machine);
+//		         }
+//		    });
+			//Thread charger = new Thread(() -> depthcharge(role, state, machine)).start();
+		    //charger.start();
+			total += depthcharge(role, state, machine);
+		}
+		return total/count;
+	}
+
+	private int depthcharge(Role role, MachineState state, StateMachine machine) throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
+		if (machine.isTerminal(state)){
+			numDepthCharges++;
+			return machine.getGoal(state, role);
+>>>>>>> origin/remote/master
 		}
 		for(int i = 0; i < count; i++){
 			try {
@@ -120,8 +141,10 @@ public class Space_JEM_mcts__multi extends StateMachineGamer {
 		return newnode;
 	}
 
-	private Node_multi create_red_node(Node_multi parent, MachineState node_state, Move my_move, int numChildren, List<Move> jointMove){
-		Node_multi newnode = new Node_multi(0, 0, parent, node_state, my_move, numChildren, jointMove);
+	private Node_multi create_red_node(Node_multi parent, MachineState node_state, Move my_move, int numChildren, List<Move> jointMove) throws MoveDefinitionException{
+		StateMachine machine = getStateMachine();
+		//List<List<Move>> jointMoves = machine.getLegalJointMoves(node_state);
+		Node_multi newnode = new Node_multi(0, 0, parent, node_state, my_move, numChildren, jointMove, -1);
 		//System.out.println("RED : move = " + jointMove.toString());
 		//System.out.println("RED : state = " + node_state.toString());
 		return newnode;
@@ -232,16 +255,19 @@ public class Space_JEM_mcts__multi extends StateMachineGamer {
 		for (int i=0; i < blue_picked.children.size(); i++){
 			int red_score = -(int)selectfn(blue_picked.children.get(i));
 			if (red_score >= score){
-				//if (!machine.isTerminal(blue_picked.children.get(i).state)){
+				if (!machine.isTerminal(blue_picked.children.get(i).state)){
 					score = red_score;
 					// result should be a red node
 					red_picked = blue_picked.children.get(i);
-				//}
+				}
 			}
 		}
 
 		//System.out.println("Red picked: " + red_picked.jointMove);
-
+		if(red_picked == null){
+			System.out.println("got null.....................");
+			return node;
+		}
 		return select(red_picked);
 	}
 
@@ -329,7 +355,14 @@ public class Space_JEM_mcts__multi extends StateMachineGamer {
 		Role role = getRole();
 
 		if(root == null){
+<<<<<<< HEAD
 			make_root();
+=======
+			int numChildren = (getStateMachine().getLegalMoves(state, role)).size();
+			//List<List<Move>> jointMoves = getStateMachine().getLegalJointMoves(state);
+			System.out.println("MADE NEW ROOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOT!!");
+			root = new Node_multi (0, 0, null, state, null, numChildren, null, -1);
+>>>>>>> origin/remote/master
 		} else {
 			set_new_root(state);
 		}

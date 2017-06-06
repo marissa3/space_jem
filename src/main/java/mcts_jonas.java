@@ -17,9 +17,14 @@ import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
 public class mcts_jonas extends StateMachineGamer {
 	private long timeout;
+<<<<<<< HEAD
+	int buffTime = 2000; //in milliseconds
+=======
 	int buffTime = 15000; //in milliseconds
+>>>>>>> branch 'remote/master' of https://github.com/marissa3/space_jem.git
 
 	private Node root = null;
+
 
 
 	@Override
@@ -301,6 +306,7 @@ public class mcts_jonas extends StateMachineGamer {
 		//if(parent.children.size() == 0){ System.out.println("children is 0"); return null;}
 		Node best = null;
 		double score = 0;
+
 		for(Node child : parent.children){
 			System.out.println("HMU: " + child.utility + " " + child.visits);
 			System.out.println(child.move);
