@@ -40,84 +40,18 @@ public class Space_JEM_mcts__multi extends StateMachineGamer {
 
 	}
 
-	public int minScore(Role role, Move m, MachineState state, StateMachine machine, int level, int limit, int count) throws MoveDefinitionException, TransitionDefinitionException, GoalDefinitionException{
-		if (timeout - System.currentTimeMillis() < buffTime) {
-			return 0;
-		}
-		List<Role> allroles = machine.getRoles();
-		int score = 100;
-		if (allroles.size() > 1){ //only for 2 players
-			Role opponent = null;
-			if (allroles.get(0).getName().equals(role.getName())){
-				opponent = allroles.get(1);
-			} else {
-				opponent = allroles.get(0);
-			}
-			score = 100;
-			List<Move> moves = machine.getLegalMoves(state, opponent);
-			for (Move move : moves){
-				List<Move> jointMove = new ArrayList<Move>();
-				List<Role> roles = machine.getRoles();
-				if (role.equals(roles.get(0))){
-					jointMove.add(m);
-					jointMove.add(move);
-				} else {
-					jointMove.add(move);
-					jointMove.add(m);
-				}
-				MachineState newState = machine.getNextState(state, jointMove);
-				int result = maxScore(role, newState, machine, level + 1, limit, count);
-				if (result == 0) return 0;
-				if (result < score) score = result;
-			}
-		} else {
-			score = 100;
-			List<Move> moves = machine.getLegalMoves(state, role);
-			for (Move move : moves){
-				List<Move> jointMove = new ArrayList<Move>();
-				List<Role> roles = machine.getRoles();
-				jointMove.add(m);
-				jointMove.add(move);
-				MachineState newState = machine.getNextState(state, jointMove);
-				int result = maxScore(role, newState, machine, level + 1, limit, count);
-				if (result == 0) return 0;
-				if (result < score) score = result;
-			}
-		}
-		return score;
-	}
-	private int min(int a, int b) {
-		if (a <= b) return a;
-		return b;
-	}
-
-	public int maxScore(Role role, MachineState state, StateMachine machine, int level, int limit, int count) throws MoveDefinitionException, GoalDefinitionException, TransitionDefinitionException
-	{
-		if (timeout - System.currentTimeMillis() < buffTime) {
-			return 0;
-		}
-		if (machine.isTerminal(state)){
-			return machine.getGoal(state, role);
-		}
-		List<Role> allroles = machine.getRoles();
-		if(level >= limit) {
-			return montecarlo(role, state, machine, count);
-		}
-		int score = 0;
-		//actions list; find legals
-		List<Move> moves = machine.getLegalMoves(state, role);
-
-		for (Move m : moves){
-			int result = minScore(role, m, state, machine, level, limit, count);
-			if(result == 100) return 100;
-			if (result > score) score = result;
-		}
-		return score;
-	}
-
 	private int montecarlo(Role role, MachineState state, StateMachine machine, int count) throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
 		int total = 0;
 		for(int i = 0; i < count; i++){
+			int value = 0;
+//		    Thread charger = new Thread(new Runnable() {
+//		         @Override
+//				public void run() {
+//		              value = depthcharge(role, state, machine);
+//		         }
+//		    });
+			Thread charger = new Thread(() -> depthcharge(role, state, machine)).start();
+		    charger.start();
 			total += depthcharge(role, state, machine);
 		}
 		return total/count;
@@ -151,19 +85,6 @@ public class Space_JEM_mcts__multi extends StateMachineGamer {
 		//if no visits, choose the parent
 		//if visited, choose a child, then recurse
 	}
-
-	//single
-	/*private boolean expand (Node_multi node, MachineState state, StateMachine machine, Role role) throws MoveDefinitionException, TransitionDefinitionException{
-		List<Move> actions = machine.getLegalMoves(state, role);
-		//List<List<Move>> jointActions = machine.getLegalJointMoves(state);
-		MachineState newstate = findAvailState(node, state, machine, role);
-		for (int i = 0; i < actions.size(); i++){
-			MachineState newstate = machine.getNextState(state, actions);// = simulate(seq(actions[i]),state);
-			Node_multi newnode = new Node_multi(0, 0, node, newstate, actions.get(i));
-			node.children.add(newnode);
-		}
-		return true;
-	}*/
 
 	private List<String> movesList(Node_multi node){
 		List<String> moves = new ArrayList<String>();
