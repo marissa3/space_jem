@@ -136,7 +136,7 @@ public class Space_JEM_mcts__multi extends StateMachineGamer {
 		return depthcharge(role, newState, machine);
 	}
 
-	private Node_multi select(Node_multi node){
+	private Node_multi select(Node_multi node, StateMachine machine, MachineState state){
 		//List<Move> actions = machine.getLegalMoves(state, role);
 		//List<Node_multi> grandchildren = new ArrayList<Node_multi>();
 		int numGrandchildren = 0;
@@ -149,12 +149,24 @@ public class Space_JEM_mcts__multi extends StateMachineGamer {
 
 		int score = 0;
 		Node_multi result = node;
-		for (int i=0; i < node.children.size(); i++){
+
+		//loop through joint moves to pick a grandchild to expand on
+		List<List<Move>> jointMoves = machine.getLegalJointMoves(state);
+		int numGrandbabies = 0;
+		for(List<Move> m : jointMoves){
+			numGrandbabies += m.size();
+		}
+
+		for (int i=0; i < node.numTotalChildren; i++){
+			for()
+
 			int newscore = (int)selectfn(node.children.get(i));
 			if (newscore >= score){
 				score = newscore;
+				//pick a grandchild
 				result = node.children.get(i);
 			}
+		}
 		}
 		return select(result);
 	}
@@ -211,6 +223,7 @@ public class Space_JEM_mcts__multi extends StateMachineGamer {
 	}
 
 	private Node_multi expand (Node_multi node, MachineState state, StateMachine machine, Role role) throws MoveDefinitionException, TransitionDefinitionException{
+<<<<<<< HEAD
 		List<Move> actions = machine.getLegalMoves(state, role);
 		if(node.children.size() == 0){
 			//List of moves for newstate is for single player
@@ -220,7 +233,7 @@ public class Space_JEM_mcts__multi extends StateMachineGamer {
 			int numChildren = (machine.getLegalMoves(newstate, role)).size();
 			Node_multi newnode = new Node_multi(node, newstate, actions.get(0), numChildren);
 			node.children.add(newnode);
-
+=======
 		List<List<Move>> jointMoves = machine.getLegalJointMoves(state);
 		if(node.grandchildren.size() == 0){
 			List<Move> firstJointMove = jointMoves.get(0);
@@ -238,6 +251,7 @@ public class Space_JEM_mcts__multi extends StateMachineGamer {
 			new_blue_node.children.add(new_red_node);
 			node.grandchildren.add(new_red_node);
 
+>>>>>>> branch 'remote/master' of https://github.com/marissa3/space_jem.git
 			//System.out.println("in expand function; first baby " + newnode.move.toString());
 			return new_red_node;
 		}
@@ -259,8 +273,11 @@ public class Space_JEM_mcts__multi extends StateMachineGamer {
 				currMove.add(jointMoves.get(i));
 				MachineState newstate = machine.getNextState(state, currMove);// = simulate(seq(actions[i]),state);
 				int numChildren = (machine.getLegalMoves(newstate, role)).size();
+<<<<<<< HEAD
 				Node_multi newnode = new Node_multi(node, newstate, actions.get(i), numChildren);
+=======
 				Node_multi newnode = new Node_multi(0, 0, node, newstate, actions.get(i), numChildren);
+>>>>>>> branch 'remote/master' of https://github.com/marissa3/space_jem.git
 				node.children.add(newnode);
 				//System.out.println("in expand function " + newnode.move.toString());
 				return newnode;
