@@ -17,7 +17,11 @@ import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
 public class mcts_jonas extends StateMachineGamer {
 	private long timeout;
+<<<<<<< HEAD
 	int buffTime = 2000; //in milliseconds
+=======
+	int buffTime = 15000; //in milliseconds
+>>>>>>> branch 'remote/master' of https://github.com/marissa3/space_jem.git
 
 	private Node root = null;
 
@@ -26,14 +30,17 @@ public class mcts_jonas extends StateMachineGamer {
 	@Override
 	public StateMachine getInitialStateMachine() {
 		// TODO Auto-generated method stub
+		//return new CachedStateMachine(new PropNetStateMachine());
 		return new CachedStateMachine(new ProverStateMachine());
+
 	}
 
 	@Override
 	public void stateMachineMetaGame(long timeout)
 			throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
 		// TODO Auto-generated method stub
-
+		root = null;
+		// start creating tree
 	}
 
 	public int minScore(Role role, Move m, MachineState state, StateMachine machine, int level, int limit, int count) throws MoveDefinitionException, TransitionDefinitionException, GoalDefinitionException{
