@@ -17,11 +17,11 @@ import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
 public class Space_JEM_mcts__multi extends StateMachineGamer {
 	private long timeout;
-	int buffTime = 3000; //in milliseconds
-
+	private int buffTime = 15000; // in milliseconds
+	private int metaBuffTime = 1500; // in milliseconds
 	private Node_multi root = null;
 	private int numDepthCharges = 0;
-
+	private int depthChargesPerNode = 6;
 
 	@Override
 	public StateMachine getInitialStateMachine() {
@@ -35,38 +35,15 @@ public class Space_JEM_mcts__multi extends StateMachineGamer {
 		// start creating tree
 		this.timeout = timeout;
 		make_root();
-		grow_tree(6);
+		grow_tree(depthChargesPerNode, metaBuffTime);
 	}
 
 	private int montecarlo(Role role, MachineState state, StateMachine machine, int count) throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
 		int total = 0;
 		ThreadCharger[] tcList = new ThreadCharger[count];
 		for(int i = 0; i < count; i++){
-<<<<<<< HEAD
-			//int value = 0;
 			tcList[i] = new ThreadCharger(role, state, machine);
 		    tcList[i].start();
-			//total += depthcharge(role, state, machine);
-=======
-			int value = 0;
-//		    Thread charger = new Thread(new Runnable() {
-//		         @Override
-//				public void run() {
-//		              value = depthcharge(role, state, machine);
-//		         }
-//		    });
-			//Thread charger = new Thread(() -> depthcharge(role, state, machine)).start();
-		    //charger.start();
-			total += depthcharge(role, state, machine);
-		}
-		return total/count;
-	}
-
-	private int depthcharge(Role role, MachineState state, StateMachine machine) throws GoalDefinitionException, MoveDefinitionException, TransitionDefinitionException {
-		if (machine.isTerminal(state)){
-			numDepthCharges++;
-			return machine.getGoal(state, role);
->>>>>>> origin/remote/master
 		}
 		for(int i = 0; i < count; i++){
 			try {
@@ -99,14 +76,6 @@ public class Space_JEM_mcts__multi extends StateMachineGamer {
 //		return depthcharge(role, newState, machine);
 //	}
 
-	private MachineState findAvailState(Node_multi node, MachineState state, StateMachine machine, Role role) throws MoveDefinitionException, TransitionDefinitionException{
-		List<Move> moves = machine.getLegalMoves(state, role);
-		return machine.getNextState(state, moves);
-		//if parent, check if it has visits
-		//if no visits, choose the parent
-		//if visited, choose a child, then recurse
-	}
-
 	private List<String> movesList(Node_multi node){
 		List<String> moves = new ArrayList<String>();
 		for(Node_multi gchild : node.grandchildren){
@@ -137,20 +106,14 @@ public class Space_JEM_mcts__multi extends StateMachineGamer {
 
 	private Node_multi create_blue_node(Node_multi parent, MachineState node_state, Move my_move, int numChildren){
 		Node_multi newnode = new Node_multi(0, 0, parent, node_state, my_move, numChildren);
-		//System.out.println("BLUE : move = " + my_move.toString());
 		return newnode;
 	}
 
-	private Node_multi create_red_node(Node_multi parent, MachineState node_state, Move my_move, int numChildren, List<Move> jointMove) throws MoveDefinitionException{
-		StateMachine machine = getStateMachine();
-		//List<List<Move>> jointMoves = machine.getLegalJointMoves(node_state);
-		Node_multi newnode = new Node_multi(0, 0, parent, node_state, my_move, numChildren, jointMove, -1);
-		//System.out.println("RED : move = " + jointMove.toString());
-		//System.out.println("RED : state = " + node_state.toString());
+	private Node_multi create_red_node(Node_multi parent, MachineState node_state, Move my_move, int numChildren, List<Move> jointMove){
+		Node_multi newnode = new Node_multi(0, 0, parent, node_state, my_move, numChildren, jointMove);
 		return newnode;
 	}
 
-	// expand done?
 	private Node_multi expand (Node_multi node, MachineState state, StateMachine machine, Role role) throws MoveDefinitionException, TransitionDefinitionException{
 		List<List<Move>> jointMoves = machine.getLegalJointMoves(state);
 		if(node.grandchildren.size() == 0){
@@ -209,19 +172,18 @@ public class Space_JEM_mcts__multi extends StateMachineGamer {
 				return new_red_node;
 			}
 		}
-		System.out.println("should never get here,,,,,,,,");
 		return node;
 	}
 
-	private void print_grandchildren(Node_multi node){
-		System.out.println("**PRINT GCHILDREN**");
-
-		for (Node_multi gchild : node.grandchildren){
-			System.out.println(gchild.jointMove);
-			System.out.println(gchild.state);
-			System.out.println();
-		}
-	}
+//	private void print_grandchildren(Node_multi node){
+//		System.out.println("**PRINT GCHILDREN**");
+//
+//		for (Node_multi gchild : node.grandchildren){
+//			System.out.println(gchild.jointMove);
+//			System.out.println(gchild.state);
+//			System.out.println();
+//		}
+//	}
 
 	private Node_multi select(Node_multi node) throws MoveDefinitionException{
 
@@ -234,8 +196,6 @@ public class Space_JEM_mcts__multi extends StateMachineGamer {
 			return node;
 		}
 
-		//System.out.println("AMT OF GCHILDREN == JOINTMOVES.SIZE");
-
 		int score = Integer.MIN_VALUE;
 
 		Node_multi blue_picked = null;
@@ -246,8 +206,6 @@ public class Space_JEM_mcts__multi extends StateMachineGamer {
 				blue_picked = node.children.get(i);
 			}
 		}
-
-		//System.out.println("Blue picked: " + blue_picked.move);
 
 		score = Integer.MIN_VALUE;
 
@@ -263,13 +221,12 @@ public class Space_JEM_mcts__multi extends StateMachineGamer {
 			}
 		}
 
-		//System.out.println("Red picked: " + red_picked.jointMove);
 		if(red_picked == null){
-			System.out.println("got null.....................");
 			return node;
 		}
 		return select(red_picked);
 	}
+
 
 	private double selectfn(Node_multi node){
 		return node.utility/node.visits + 50 * Math.sqrt(Math.log(node.parent.visits)/node.visits);
@@ -284,7 +241,7 @@ public class Space_JEM_mcts__multi extends StateMachineGamer {
 	  return true;
 	}
 
-	public void grow_tree(int count) throws MoveDefinitionException, TransitionDefinitionException, GoalDefinitionException{
+	public void grow_tree(int count, int myBuffTime) throws MoveDefinitionException, TransitionDefinitionException, GoalDefinitionException{
 		StateMachine machine = getStateMachine();
 		Role role = getRole();
 		boolean isTimeToSendMove = false;
@@ -300,16 +257,15 @@ public class Space_JEM_mcts__multi extends StateMachineGamer {
 			int score = montecarlo(role, expandedNode_multi.state, machine, count);
 			backpropagate(expandedNode_multi, score);
 
-			if (timeout - System.currentTimeMillis() < buffTime) {
+			if (timeout - System.currentTimeMillis() < myBuffTime) {
 				isTimeToSendMove = true;
 				break;
 			}
 		}
-		//System.out.println(numDepthCharges);
 	}
 
 	public Move findBest(Role role, MachineState state) throws MoveDefinitionException, GoalDefinitionException, TransitionDefinitionException{
-		grow_tree(6);
+		grow_tree(depthChargesPerNode, buffTime);
 		return highMoveUtil(root);
 	}
 
@@ -355,20 +311,13 @@ public class Space_JEM_mcts__multi extends StateMachineGamer {
 		Role role = getRole();
 
 		if(root == null){
-<<<<<<< HEAD
 			make_root();
-=======
-			int numChildren = (getStateMachine().getLegalMoves(state, role)).size();
-			//List<List<Move>> jointMoves = getStateMachine().getLegalJointMoves(state);
-			System.out.println("MADE NEW ROOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOT!!");
-			root = new Node_multi (0, 0, null, state, null, numChildren, null, -1);
->>>>>>> origin/remote/master
 		} else {
 			set_new_root(state);
 		}
 
 		Move best = findBest(role, state);
-		System.out.println("Depth charges per move: " + numDepthCharges);
+		System.out.println("Depth charges per move: " + numDepthCharges + "\n");
 		return best;
 	}
 

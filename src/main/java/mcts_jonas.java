@@ -17,11 +17,7 @@ import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
 public class mcts_jonas extends StateMachineGamer {
 	private long timeout;
-<<<<<<< HEAD
-	int buffTime = 2000; //in milliseconds
-=======
 	int buffTime = 15000; //in milliseconds
->>>>>>> branch 'remote/master' of https://github.com/marissa3/space_jem.git
 
 	private Node root = null;
 
