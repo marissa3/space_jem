@@ -17,11 +17,11 @@ import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
 public class Space_JEM_mcts__multi extends StateMachineGamer {
 	private long timeout;
-	private int buffTime = 15000; // in milliseconds
+	private int buffTime = 3000; // in milliseconds
 	private int metaBuffTime = 1500; // in milliseconds
 	private Node_multi root = null;
 	private int numDepthCharges = 0;
-	private int depthChargesPerNode = 6;
+	private int depthChargesPerNode = 4;
 
 	@Override
 	public StateMachine getInitialStateMachine() {
