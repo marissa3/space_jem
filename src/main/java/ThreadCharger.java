@@ -20,18 +20,14 @@ public class ThreadCharger extends Thread {
 		this.role = role;
 		this.state = state;
 		this.machine = machine;
-		//System.out.println("ThreadCharger created.");
 	}
 
 	@Override
 	public void run() {
-		//System.out.println("ThreadCharger running.");
 		int val = 0;
 		try {
-			//System.out.println("Before depthcharge.");
 			val = depthcharge(role, state, machine);
 		} catch (GoalDefinitionException | MoveDefinitionException | TransitionDefinitionException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		dc_val = val;
